@@ -20,7 +20,7 @@ def index():
 
     # scoreboard
     sql = '''
-        SELECT rank, team_name, win, draw, lose,
+        SELECT team_name, win, draw, lose,
             goals_for, goals_against
         FROM team, scoreboard
         WHERE team.team_id=scoreboard.team_id and team.season_id = {}
@@ -34,6 +34,12 @@ def index():
         sb[i]["matches"] = sb[i]['win'] + sb[i]['draw'] + sb[i]['lose']
         sb[i]["goals_diff"] = sb[i]['goals_for'] - sb[i]['goals_against']
         sb[i]["score"] = sb[i]['win'] * 3 + sb[i]['draw']
+
+    # 排序
+    sb.sort(key=lambda x: (x['score'], x['goals_diff'], x['goals_for']),
+            reverse=True)
+    for i in range(len(sb)):
+        sb[i]['rank'] = i + 1
 
     # matches
     sql = '''
