@@ -5,7 +5,7 @@ create table user
 (
 	user_id int primary key auto_increment,
 	user_name char(32),
-	password char(64)
+	password char(94)
 );
 
 drop table if exists season;
@@ -13,7 +13,8 @@ create table season
 (
 	season_id int primary key auto_increment,
 	season_name char(32),
-	season_type char(10) /*  leage / cup / super cup  */
+	season_type char(10), /*  leage / cup / super cup  */
+	season_status char(1) /*是否可用*/
 );
 
 drop table if exists team;
@@ -23,7 +24,8 @@ create table team
 	team_name char(32),
 	user_id int,
 	season_id int,
-	constraint team_user_id foreign key(user_id) references user(user_id),
+	/*注释此行是为了暂时屏蔽登录功能
+	constraint team_user_id foreign key(user_id) references user(user_id),*/
 	constraint team_season_id foreign key(season_id) references season(season_id)
 );
 
@@ -40,6 +42,22 @@ create table matches
 	team2_score tinyint,
 	constraint match_season_id foreign key(season_id) references season(season_id)
 );
+
+
+drop table if exists scoreboard;
+create table scoreboard
+(
+	season_id int,
+	team_id int,
+	rank int,
+	win tinyint,
+	draw tinyint,
+	lose tinyint,
+	goals_for smallint,
+	goals_against smallint,
+	primary key(season_id,team_id)
+);
+
 
 drop table if exists player;
 create table player

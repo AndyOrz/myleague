@@ -11,8 +11,10 @@ def get_db():
             host="127.0.0.1",
             user="myleague",
             password="Anqi_990321",
-            database="myleague_test")
-        g.db.row_factory = g.db.cursor()
+            database="myleague_test",
+            buffered=True
+        )
+        # g.db.row_factory = g.db.cursor()
         
     return g.db
 
@@ -22,6 +24,7 @@ def init_db():
 
     with current_app.open_resource('../database/init.sql') as f:
         db.cursor().execute(f.read().decode('utf8'))
+
 
 @click.command('init-db')
 @with_appcontext
@@ -41,3 +44,4 @@ def close_db(e=None):
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+    

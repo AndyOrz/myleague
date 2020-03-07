@@ -1,0 +1,54 @@
+<!doctype html>
+<title>{% block title %}{% endblock %}</title>
+
+<head>
+  <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
+</head>
+
+<body>
+  <nav class="navbar navbar-dark bg-dark justify-content-between">
+    <a class="navbar-brand">斌哥是🏆</a>
+    <form class="form-inline">
+      {% if g.user %}
+      <span>{{ g.user['username'] }}</span>
+      <a href="{{ url_for('auth.logout') }}">
+        <button class="btn btn-sm btn-outline-light" type="button">Logout</button>
+      </a>
+      {% endif %}
+    </form>
+  </nav>
+  <div class="cotainer-fluid">
+    <div class="row">
+      
+      <!-- sidebar begin -->
+      <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+        <div class="sidebar-sticky">
+          <ul class="nav flex-column">
+            {% for item in sidebar_items %}
+            <li class="nav-item">
+              <a class="nav-link {% if g.user %} active {% endif %}" href="#">{{ item }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </nav>
+      <!-- sidebar end -->
+
+      <div class="col-md-8">
+        <h3>积分榜</h3>
+        {% block content_scoreboard %}{% endblock %}
+        <h3>本轮对阵</h3>
+        {% block content_matches %}{% endblock %}
+        <h3>射手榜</h3>
+        {% block content_scores %}{% endblock %}
+      </div>
+        
+      
+    </div>
+
+  </div>
+
+</body>
