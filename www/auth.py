@@ -20,16 +20,16 @@ def register():
         error = None
 
         if not username:
-            error = 'Username is required.'
+            error = '请输入用户名.'
         elif not password:
-            error = 'Password is required.'
+            error = '请输入密码.'
         else:
             cur.execute(
                 'SELECT user_id FROM user WHERE user_name = "{}"'
                 .format(username)
             )
             if cur.fetchone() is not None:
-                error = 'User {} is already registered.'.format(username)
+                error = '用户 {} 已存在.'.format(username)
 
         if error is None:
             cur.execute(
@@ -58,9 +58,9 @@ def login():
         user = cur.fetchone()
 
         if user is None:
-            error = 'Incorrect username.'
+            error = '用户名不存在.'
         elif check_password_hash(user['password'], password) is False:
-            error = 'Incorrect password.'
+            error = '密码错误.'
 
         if error is None:
             session.clear()
