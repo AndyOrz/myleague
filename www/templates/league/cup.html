@@ -1,0 +1,73 @@
+{% extends './league/base.html' %}
+
+{% block header %}
+<h1>{% block title %}{{name}}{% endblock %}</h1>
+{% endblock %}
+
+{% block content_scoreboard %}
+{% for group in scoreboard %}
+<h4>Group{{ loop.index }}</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">排名</th>
+            <th scope="col">球队</th>
+            <th scope="col">场次</th>
+            <th scope="col">胜</th>
+            <th scope="col">平</th>
+            <th scope="col">负</th>
+            <th scope="col">进球</th>
+            <th scope="col">失球</th>
+            <th scope="col">净胜球</th>
+            <th scope="col">积分</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in group %}
+        <tr>
+            <th scope="row">{{ s['rank'] }}</th>
+            <td>{{ s['team_name'] }}</td>
+            <td>{{ s['matches'] }}</td>
+            <td>{{ s['win'] }}</td>
+            <td>{{ s['draw'] }}</td>
+            <td>{{ s['lose'] }}</td>
+            <td>{{ s['goals_for'] }}</td>
+            <td>{{ s['goals_against'] }}</td>
+            <td>{{ s['goals_diff'] }}</td>
+            <td>{{ s['score'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}
+
+{% block content_matches %}
+<table class="table">
+    <tbody>
+        {% for m in matches %}
+        <tr>
+            <td>{{ m['team1'] }} vs {{ m['team2'] }}</td>            
+            <td>
+                {% if m['team1_score'] == None and m['team2_score'] == None %}
+                <form class="form-inline" action="{{ url_for('works.submit_match_result') }}" method="POST">
+                    <input type="number" name="match_id" value="{{m['match_id']}}" hidden>
+                    <input type="number" name="team1_score" style="width:50px">
+                    --
+                    <input type="number" name="team2_score" style="width:50px">
+                    &emsp;
+                    <button class="btn btn-sm btn-outline-dark" type="submit">提交</button>
+                </form>
+                {% else %}
+                    {{ m['team1_score'] }} - {{ m['team2_score'] }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+
+{% block content_scores %}
+{% endblock %}

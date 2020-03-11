@@ -37,7 +37,7 @@ def register():
                 .format(username, generate_password_hash(password))
             )
             db.commit()
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('index'))
 
         flash(error)
 
@@ -76,12 +76,12 @@ def login():
 def load_logged_in_user():
     user_id = session.get('user_id')
     db = get_db()
-    cur = db.cursor()
+    cur = db.cursor(dictionary=True)
     if user_id is None:
         g.user = None
     else:
         cur.execute(
-            'SELECT * FROM user WHERE user_id = {}'.format(user_id)
+            'SELECT user_id, user_name FROM user WHERE user_id = {}'.format(user_id)
         )
         g.user = cur.fetchone()
 
@@ -101,3 +101,9 @@ def login_required(view):
         return view(**kwargs)
 
     return wrapped_view
+
+
+@bp.route('/repassword')
+@login_required
+def repassword():
+    return "莫得"

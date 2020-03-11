@@ -7,7 +7,8 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='dev'
+        SECRET_KEY='dev',
+        JSON_AS_ASCII=False
         # DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
 
@@ -33,5 +34,11 @@ def create_app(test_config=None):
     from . import league
     app.register_blueprint(league.bp)
     app.add_url_rule('/', endpoint='index')
+
+    from . import manage
+    app.register_blueprint(manage.bp)
+
+    from . import works
+    app.register_blueprint(works.bp)
 
     return app

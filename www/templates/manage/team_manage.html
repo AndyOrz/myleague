@@ -1,0 +1,67 @@
+{% extends './manage/base.html' %}
+
+{% block header %}
+<h1>{% block title %}{{name}}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<h2>联赛</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">队伍名称</th>
+            <th scope="col">操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in league_teams %}
+        <tr>
+            <td>{{ t['team_name'] }}</td>
+            <td>
+                <form action="{{ url_for('works.del_team') }}" method="post">
+                    <input name="team_id" value="{{t['team_id']}}" hidden>
+                    <input type="submit" class="btn btn-sm btn-secondary" value="删除">
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h4>添加队伍</h4>
+<form action="{{ url_for('works.add_league_team') }}" method="post">
+    <label for="team_name">队伍名</label>
+    <input name="team_name" id="team_name" required>
+    <input type="submit" class="btn btn-sm btn-dark" value="提交">
+</form>
+
+<br><br>
+<h2 >杯赛</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">队伍名称</th>
+            <th scope="col">操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in cup_teams %}
+        <tr>
+            <td>{{ t['team_name'] }}</td>
+            <td>
+                <form action="{{ url_for('works.del_team') }}" method="post">
+                    <input name="team_id" value="{{t['team_id']}}" hidden>
+                    <input type="submit" class="btn btn-sm btn-secondary" value="删除">
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h4>添加队伍</h4>
+<form action="{{ url_for('works.add_cup_team') }}" method="post">
+    <label for="team_name">队伍名</label>
+    <input name="team_name" id="team_name" required>
+    <input type="submit" class="btn btn-sm btn-dark" value="提交">
+</form>
+{% endblock %}

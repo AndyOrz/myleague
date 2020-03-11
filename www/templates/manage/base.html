@@ -2,6 +2,7 @@
 <title>{% block title %}{% endblock %}</title>
 
 <head>
+  <meta charset="utf-8">
   <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
@@ -38,12 +39,7 @@
       <!-- sidebar end -->
 
       <div class="col-md-8">
-        <h3>积分榜</h3>
-        {% block content_scoreboard %}{% endblock %}
-        <h3>本轮对阵</h3>
-        {% block content_matches %}{% endblock %}
-        <h3>射手榜</h3>
-        {% block content_scores %}{% endblock %}
+        {% block content %}{% endblock %}
       </div>
         
       

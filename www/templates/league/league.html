@@ -1,7 +1,7 @@
 {% extends './league/base.html' %}
 
 {% block header %}
-<h1>{% block title %}联赛{% endblock %}</h1>
+<h1>{% block title %}{{name}}{% endblock %}</h1>
 {% endblock %}
 
 
@@ -49,13 +49,13 @@
             <td>{{ m['team1'] }} vs {{ m['team2'] }}</td>            
             <td>
                 {% if m['team1_score'] == None and m['team2_score'] == None %}
-                <form class="form-inline" action="{{ url_for('league.submit_match_result') }}" method="POST">
+                <form class="form-inline" action="{{ url_for('works.submit_match_result') }}" method="POST">
                     <input type="number" name="match_id" value="{{m['match_id']}}" hidden>
                     <input type="number" name="team1_score" style="width:50px">
                     --
                     <input type="number" name="team2_score" style="width:50px">
                     &emsp;
-                    <button class="btn btn-sm btn-outline-dark" type="submit">Submit</button>
+                    <button class="btn btn-sm btn-outline-dark" type="submit">提交</button>
                 </form>
                 {% else %}
                     {{ m['team1_score'] }} - {{ m['team2_score'] }}
