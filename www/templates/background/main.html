@@ -1,8 +1,44 @@
 {% extends './background/base.html' %}
 
+{% macro input(which, list, season_id, round_id) %}
+<h2>现在是{{list[season_id|int]}}--{{which}}的第{{round_id}}轮</h2>
+<form action="{{ url_for('works.change_season_round', which=which)}}" method="POST">
+  <div class="form-row">
+    <div class="form-group col-md-4">
+      <label for="season">选择赛事</label>
+      <select id="season" class="form-control" name="season">
+        {% for k,v in list.items() %}
+        {% if k == season_id|int %}
+        <option selected>{{k}}-{{v}}</option>
+        {% else %}
+        <option>{{k}}-{{v}}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group col-md-4">
+      <label>轮</label>
+      <input type="number" class="form-control" name="round" value="{{round_id}}">
+    </div>
+    <div class="form-group col-md-1">
+      <label>&emsp;</label>
+      <button type="submit" class="btn btn-outline-dark">更改</button>
+    </div>
+  </div>
+</form>
+{% endmacro %}
+
 {% block header %}
 <h1>{% block title %}{{name}} -- 后台{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+{{input("league",league_list,current_cfg['league_season_id'],current_cfg['league_round_id'])}}
+<br>
+
+{{input("cup",cup_list,current_cfg['cup_season_id'],current_cfg['cup_round_id'])}}
+<br>
+
+{{input("supercup",supercup_list,current_cfg['supercup_season_id'],current_cfg['supercup_round_id'])}}
+<br>
 {% endblock %}

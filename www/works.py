@@ -5,11 +5,10 @@ import numpy as np
 import math
 from www.auth import login_required, root_login_required
 from www.db import get_db
-from www.config import get_cfg_global
-
+from www.config import config
 
 bp = Blueprint('works', __name__)
-cfg = get_cfg_global()
+cfg = config.get_cfg_global()
 
 
 @bp.route('/submit_match_result', methods=('GET', 'POST'))
@@ -22,8 +21,7 @@ def submit_match_result():
             update matches set team1_score={}, team2_score={}
             where match_id={}
             '''.format(request.form['team1_score'],
-                       request.form['team2_score'],
-                       request.form['match_id'])
+                       request.form['team2_score'], request.form['match_id'])
 
         cur.execute(sql)
         db.commit()
@@ -39,9 +37,8 @@ def add_league_team():
         sql1 = '''
             insert into team (team_name, user_id, season_id)
             values('{}', {}, {})
-            '''.format(request.form['team_name'],
-                       g.user['user_id'],
-                       cfg.league_season_id)
+            '''.format(request.form['team_name'], g.user['user_id'],
+                       cfg['league_season_id'])
 
         cur.execute(sql1)
         db.commit()
@@ -57,9 +54,8 @@ def add_cup_team():
         sql2 = '''
             insert into team (team_name, user_id, season_id)
             values('{}', {}, {})
-            '''.format(request.form['team_name'],
-                       g.user['user_id'],
-                       cfg.cup_season_id)
+            '''.format(request.form['team_name'], g.user['user_id'],
+                       cfg['cup_season_id'])
         cur.execute(sql2)
         db.commit()
     return redirect(url_for('manage.team_manage'))
@@ -80,6 +76,26 @@ def del_team():
     return redirect(url_for('manage.team_manage'))
 
 
+@bp.route('/change_season_round/<which>', methods=('GET', 'POST'))
+@root_login_required
+def change_season_round(which):
+    season_id = request.form['season'].split('-', 1)[0]
+    round_id = request.form['round']
+    if which == 'league':
+        cfg.set('default', 'league_season_id', season_id)
+        cfg.set('default', 'league_round_id', round_id)
+    elif which == 'cup':
+        cfg.set('default', 'cup_season_id', season_id)
+        cfg.set('default', 'cup_round_id', round_id)
+    elif which == 'supercup':
+        cfg.set('default', 'supercup_season_id', season_id)
+        cfg.set('default', 'supercup_round_id', round_id)
+
+    with open('./www/config/global.conf', 'w') as f:
+        cfg.write(f)
+    return str(round_id) + "  " + str(season_id) + "  " + which
+
+
 @bp.route('/cup_chouqian')
 @root_login_required
 def cup_chouqian():
@@ -89,25 +105,25 @@ def cup_chouqian():
 
     sql = '''
           select team_id, team_name from team where season_id={}
-          '''.format(cfg.cup_season_id)
+          '''.format(cfg['cup_season_id'])
     cur.execute(sql)
     teams = np.array(cur.fetchall())
-    indeices = math.ceil(len(teams) / float(cfg.cup_group_member))
+    indeices = math.ceil(len(teams) / float(cfg['cup_group_member']))
 
     # 删除原来的记录
-    sql = 'delete from matches where season_id={}'.format(cfg.cup_season_id)
+    sql = 'delete from matches where season_id={}'.format(cfg['cup_season_id'])
     cur.execute(sql)
     db.commit()
 
     if len(teams) == 0:
-        return "清空赛程" 
+        return "清空赛程"
     # 随机分组
     np.random.shuffle(teams)
     groups = np.array_split(teams, indeices)
 
     # 生成赛程
     for group, i in zip(groups, range(len(groups))):
-        output += "group"+chr(65+i)+":<br>"
+        output += "group" + chr(65 + i) + ":<br>"
         # 输出分组结果
         for team in group:
             sql = '''update team set group_id={}
@@ -119,16 +135,16 @@ def cup_chouqian():
         match_gen = robin.RoundRobinScheduler(group.tolist(), meetings=1)
         rounds = match_gen.generate_schedule()
         for round, j in zip(rounds, range(len(rounds))):
-            output += "&ensp;round "+str(j+1)+"<br>"
+            output += "&ensp;round " + str(j + 1) + "<br>"
             for match in round:
                 if (match[0] is not None and match[1] is not None):
-                    output += "&ensp;&ensp;"+str(match[0]['team_name'])
-                    output += " vs "+str(match[1]['team_name'])+"<br>"
+                    output += "&ensp;&ensp;" + str(match[0]['team_name'])
+                    output += " vs " + str(match[1]['team_name']) + "<br>"
                     sql = '''
                           insert into matches (season_id, round_id,
                             team1_id, team2_id) values
                             ({}, {}, {}, {})
-                          '''.format(cfg.cup_season_id, j+1,
+                          '''.format(cfg['cup_season_id'], j + 1,
                                      match[0]['team_id'], match[1]['team_id'])
                     cur.execute(sql)
                     db.commit()

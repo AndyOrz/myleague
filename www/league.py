@@ -3,12 +3,12 @@ from flask import (Blueprint, g, render_template)
 from www.auth import login_required
 from www.db import get_db
 from tools.tools import cutList1
-from www.config import get_cfg_global, get_sidebar_items
+from www.config import config
 
 bp = Blueprint('league', __name__)
 
-cfg = get_cfg_global()
-sidebar_items = get_sidebar_items()
+cfg = config.get_cfg_global()['default']
+sidebar_items = config.get_sidebar_items()
 
 
 @bp.route(sidebar_items['league']['route'])
@@ -23,7 +23,7 @@ def league():
             goals_for, goals_against
         FROM team, scoreboard
         WHERE team.team_id=scoreboard.team_id and team.season_id = {}
-        '''.format(cfg['default']['league_season_id'])
+        '''.format(cfg['league_season_id'])
 
     cur.execute(sql)
     sb = cur.fetchall()
@@ -46,8 +46,8 @@ def league():
         FROM matches as m, team as t1, team as t2
         WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
             and m.season_id = {} and m.round_id = {}
-        '''.format(cfg['default']['league_season_id'],
-                   cfg['default']['league_round_id'])
+        '''.format(cfg['league_season_id'],
+                   cfg['league_round_id'])
 
     cur.execute(sql)
     matches = cur.fetchall()
@@ -71,7 +71,7 @@ def cup():
             goals_for, goals_against
         FROM team, scoreboard
         WHERE team.team_id=scoreboard.team_id and team.season_id = {}
-        '''.format(cfg['default']['cup_season_id'])
+        '''.format(cfg['cup_season_id'])
 
     cur.execute(sql)
     sb = cur.fetchall()
@@ -101,8 +101,8 @@ def cup():
         FROM matches as m, team as t1, team as t2
         WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
             and m.season_id = {} and m.round_id = {}
-        '''.format(cfg['default']['cup_season_id'],
-                   cfg['default']['cup_round_id'])
+        '''.format(cfg['cup_season_id'],
+                   cfg['cup_round_id'])
 
     cur.execute(sql)
     matches = cur.fetchall()
@@ -136,7 +136,7 @@ def team_manage():
     sql = '''
         SELECT team_name, team_id FROM team
         WHERE user_id={} and season_id = {}
-        '''.format(g.user['user_id'], cfg['default']['league_season_id'])
+        '''.format(g.user['user_id'], cfg['league_season_id'])
 
     cur.execute(sql)
     league_teams = cur.fetchall()
@@ -144,7 +144,7 @@ def team_manage():
     sql = '''
         SELECT team_name, team_id FROM team
         WHERE user_id={} and season_id = {}
-        '''.format(g.user['user_id'], cfg['default']['cup_season_id'])
+        '''.format(g.user['user_id'], cfg['cup_season_id'])
 
     cur.execute(sql)
     cup_teams = cur.fetchall()

@@ -106,7 +106,7 @@ def login_required(view):
 def root_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if int(g.user['pri']) != 0:
+        if g.user is None or int(g.user['pri']) != 0:
             return redirect(url_for('auth.login'))
         return view(**kwargs)
 
