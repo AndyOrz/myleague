@@ -5,7 +5,8 @@ create table user
 (
     user_id int primary key auto_increment,
     user_name char(32),
-    password char(94)
+    password char(94),
+    pri tinyint
 );
 
 drop table if exists season;

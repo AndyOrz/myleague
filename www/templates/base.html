@@ -1,0 +1,53 @@
+<!doctype html>
+<title>{% block title %}{% endblock %}</title>
+
+<head>
+  <meta charset="utf-8">
+  <link href="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
+</head>
+
+<body>
+  <nav class="navbar navbar-dark bg-dark justify-content-between">
+    <a class="navbar-brand">斌哥是🏆</a>
+    {% if g.user %}
+    <span class="navbar-text ml-auto">{{ g.user['user_name'] }}</span>
+    &emsp;
+    <form class="form-inline">
+      <a href="{{ url_for('auth.logout') }}">
+        <button class="btn btn-sm btn-outline-light" type="button">登出</button>
+      </a>
+    </form>
+      {% if g.user['pri']==0 %}
+      <form class="form-inline">
+        <a href="{{ url_for('background.main') }}">
+          <button class="btn btn-sm btn-outline-light" type="button">后台</button>
+        </a>
+      </form>
+      {% endif %}
+    {% endif %}
+  </nav>
+  <div class="cotainer-fluid">
+    <div class="row">
+
+      <!-- sidebar begin -->
+      <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+        <div class="sidebar-sticky">
+          <ul class="nav flex-column">
+            {% block sidebar %}{% endblock %}
+          </ul>
+        </div>
+      </nav>
+      <!-- sidebar end -->
+
+      <div class="col-md-8">
+        {% block content %}{% endblock %}
+      </div>
+
+    </div>
+
+  </div>
+
+</body>

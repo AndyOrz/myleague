@@ -1,15 +1,17 @@
-from flask import (Blueprint, flash, g, redirect, render_template, request,
-                   url_for)
+from flask import (Blueprint, g, render_template)
 
 from www.auth import login_required
 from www.db import get_db
 from tools.tools import cutList1
-import config as cfg
+from www.config import get_cfg_global, get_sidebar_items
 
 bp = Blueprint('league', __name__)
 
+cfg = get_cfg_global()
+sidebar_items = get_sidebar_items()
 
-@bp.route(cfg.sidebar_items['league']['route'])
+
+@bp.route(sidebar_items['league']['route'])
 @login_required
 def league():
     db = get_db()
@@ -21,7 +23,7 @@ def league():
             goals_for, goals_against
         FROM team, scoreboard
         WHERE team.team_id=scoreboard.team_id and team.season_id = {}
-        '''.format(cfg.league_season_id)
+        '''.format(cfg['default']['league_season_id'])
 
     cur.execute(sql)
     sb = cur.fetchall()
@@ -44,19 +46,20 @@ def league():
         FROM matches as m, team as t1, team as t2
         WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
             and m.season_id = {} and m.round_id = {}
-        '''.format(cfg.league_season_id, cfg.league_round_id)
+        '''.format(cfg['default']['league_season_id'],
+                   cfg['default']['league_round_id'])
 
     cur.execute(sql)
     matches = cur.fetchall()
 
     return render_template('league/league.html',
-                           name=cfg.sidebar_items['league']['name'],
-                           sidebar_items=cfg.sidebar_items,
+                           name=sidebar_items['league']['name'],
+                           sidebar_items=sidebar_items,
                            scoreboard=sb,
                            matches=matches)
 
 
-@bp.route(cfg.sidebar_items['cup']['route'])
+@bp.route(sidebar_items['cup']['route'])
 @login_required
 def cup():
     db = get_db()
@@ -68,7 +71,7 @@ def cup():
             goals_for, goals_against
         FROM team, scoreboard
         WHERE team.team_id=scoreboard.team_id and team.season_id = {}
-        '''.format(cfg.cup_season_id)
+        '''.format(cfg['default']['cup_season_id'])
 
     cur.execute(sql)
     sb = cur.fetchall()
@@ -79,10 +82,10 @@ def cup():
         sb[i]["score"] = sb[i]['win'] * 3 + sb[i]['draw']
 
     # 排序
-    sb.sort(key=lambda x: (x['group_id'], x['score'],
-                           x['goals_diff'], x['goals_for']),
+    sb.sort(key=lambda x:
+            (x['group_id'], x['score'], x['goals_diff'], x['goals_for']),
             reverse=True)
-    
+
     # 切片
     new_sb = cutList1(sb, "group_id")
 
@@ -98,26 +101,69 @@ def cup():
         FROM matches as m, team as t1, team as t2
         WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
             and m.season_id = {} and m.round_id = {}
-        '''.format(cfg.cup_season_id, cfg.cup_round_id)
+        '''.format(cfg['default']['cup_season_id'],
+                   cfg['default']['cup_round_id'])
 
     cur.execute(sql)
     matches = cur.fetchall()
 
     return render_template('league/cup.html',
-                           name=cfg.sidebar_items['cup']['name'],
-                           sidebar_items=cfg.sidebar_items,
+                           name=sidebar_items['cup']['name'],
+                           sidebar_items=sidebar_items,
                            scoreboard=new_sb,
-                           matches=matches
-                           )
+                           matches=matches)
 
 
-@bp.route(cfg.sidebar_items['supercup']['route'])
+@bp.route(sidebar_items['supercup']['route'])
 @login_required
 def supercup():
     db = get_db()
     cur = db.cursor(dictionary=True)
+    
+    return render_template(
+        'league/supercup.html',
+        name=sidebar_items['supercup']['name'],
+        sidebar_items=sidebar_items,
+    )
 
-    return render_template('league/supercup.html',
-                           name=cfg.sidebar_items['supercup']['name'],
-                           sidebar_items=cfg.sidebar_items,
+
+@bp.route(sidebar_items['team_manage']['route'])
+@login_required
+def team_manage():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+
+    sql = '''
+        SELECT team_name, team_id FROM team
+        WHERE user_id={} and season_id = {}
+        '''.format(g.user['user_id'], cfg['default']['league_season_id'])
+
+    cur.execute(sql)
+    league_teams = cur.fetchall()
+
+    sql = '''
+        SELECT team_name, team_id FROM team
+        WHERE user_id={} and season_id = {}
+        '''.format(g.user['user_id'], cfg['default']['cup_season_id'])
+
+    cur.execute(sql)
+    cup_teams = cur.fetchall()
+
+    return render_template('manage/team_manage.html',
+                           name=sidebar_items['team_manage']['name'],
+                           sidebar_items=sidebar_items,
+                           league_teams=league_teams,
+                           cup_teams=cup_teams
+                           )
+
+
+@bp.route(sidebar_items['player_register']['route'])
+@login_required
+def player_register():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    
+    return render_template('manage/player_register.html',
+                           name=sidebar_items['player_register']['name'],
+                           sidebar_items=sidebar_items,
                            )

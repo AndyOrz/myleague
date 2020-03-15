@@ -3,11 +3,13 @@ from flask import (Blueprint, flash, g, redirect, render_template, request,
 import competitions.scheduler.roundrobin as robin
 import numpy as np
 import math
-from www.auth import login_required
+from www.auth import login_required, root_login_required
 from www.db import get_db
-import config as cfg
+from www.config import get_cfg_global
+
 
 bp = Blueprint('works', __name__)
+cfg = get_cfg_global()
 
 
 @bp.route('/submit_match_result', methods=('GET', 'POST'))
@@ -16,7 +18,6 @@ def submit_match_result():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
-
         sql = '''
             update matches set team1_score={}, team2_score={}
             where match_id={}
@@ -35,7 +36,6 @@ def add_league_team():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
-
         sql1 = '''
             insert into team (team_name, user_id, season_id)
             values('{}', {}, {})
@@ -54,7 +54,6 @@ def add_cup_team():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
-
         sql2 = '''
             insert into team (team_name, user_id, season_id)
             values('{}', {}, {})
@@ -72,7 +71,6 @@ def del_team():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
-
         sql = '''
             delete from team where team_id={}
             '''.format(request.form['team_id'])
@@ -83,7 +81,7 @@ def del_team():
 
 
 @bp.route('/cup_chouqian')
-@login_required
+@root_login_required
 def cup_chouqian():
     db = get_db()
     cur = db.cursor(dictionary=True)

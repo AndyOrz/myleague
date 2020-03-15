@@ -35,10 +35,10 @@ def create_app(test_config=None):
     app.register_blueprint(league.bp)
     app.add_url_rule('/', endpoint='index')
 
-    from . import manage
-    app.register_blueprint(manage.bp)
-
     from . import works
     app.register_blueprint(works.bp)
+
+    from . import backgruoud
+    app.register_blueprint(backgruoud.bp)
 
     return app
