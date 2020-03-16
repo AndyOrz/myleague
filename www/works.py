@@ -3,12 +3,14 @@ from flask import (Blueprint, flash, g, redirect, render_template, request,
 import competitions.scheduler.roundrobin as robin
 import numpy as np
 import math
+import json
 from www.auth import login_required, root_login_required
 from www.db import get_db
 from www.config import config
+from tools.tools import cutList1
 
-bp = Blueprint('works', __name__)
-cfg = config.get_cfg_global()
+bp = Blueprint('works', __name__, url_prefix='/works')
+cfg = config.get_cfg_global()['default']
 
 
 @bp.route('/submit_match_result', methods=('GET', 'POST'))
@@ -42,7 +44,7 @@ def add_league_team():
 
         cur.execute(sql1)
         db.commit()
-    return redirect(url_for('manage.team_manage'))
+    return redirect(url_for('league.team_manage'))
 
 
 @bp.route('/add_cup_team', methods=('GET', 'POST'))
@@ -58,7 +60,7 @@ def add_cup_team():
                        cfg['cup_season_id'])
         cur.execute(sql2)
         db.commit()
-    return redirect(url_for('manage.team_manage'))
+    return redirect(url_for('league.team_manage'))
 
 
 @bp.route('/del_team', methods=('GET', 'POST'))
@@ -73,7 +75,7 @@ def del_team():
 
         cur.execute(sql)
         db.commit()
-    return redirect(url_for('manage.team_manage'))
+    return redirect(url_for('league.team_manage'))
 
 
 @bp.route('/change_season_round/<which>', methods=('GET', 'POST'))
@@ -94,6 +96,128 @@ def change_season_round(which):
     with open('./www/config/global.conf', 'w') as f:
         cfg.write(f)
     return str(round_id) + "  " + str(season_id) + "  " + which
+
+
+@bp.route('/get_schedule', methods=('GET', 'POST'))
+@root_login_required
+def get_schedule():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    season_id = request.form['season_id']
+    sql = '''
+        SELECT match_id, round_id, t1.group_id as group_id,
+            t1.team_name as team1, t2.team_name as team2,
+            team1_score, team2_score
+        FROM matches as m, team as t1, team as t2
+        WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
+            and m.season_id = {} order by round_id
+        '''.format(season_id)
+
+    cur.execute(sql)
+    rounds = cutList1(cur.fetchall(), "round_id")
+
+    return json.dumps(rounds)
+
+
+@bp.route('/delete_schedule', methods=('GET', 'POST'))
+@root_login_required
+def delete_schedule():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    season_id = request.form['season_id']
+    sql = '''
+          delete from matches where season_id={}
+          '''.format(season_id)
+    cur.execute(sql)
+    db.commit()
+
+    return ""
+
+
+@bp.route('/generate_schedule', methods=('GET', 'POST'))
+@root_login_required
+def generate_schedule():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    season_id = request.form['season_id']
+
+    sql = '''
+          select season_type from season where season_id={}
+          '''.format(season_id)
+    cur.execute(sql)
+    season_type = cur.fetchone()['season_type']
+
+    sql = '''
+          select team_id, team_name from team where season_id={}
+          '''.format(season_id)
+    cur.execute(sql)
+    teams = np.array(cur.fetchall())
+    schedule = list()
+
+    if season_type == 'league':
+        match_gen = robin.RoundRobinScheduler(teams.tolist(), meetings=2)
+        rounds = match_gen.generate_schedule()
+        for round, j in zip(rounds, range(len(rounds))):
+            for match in round:
+                if (match[0] is not None and match[1] is not None):
+                    schedule.append({
+                        "round_id": j + 1,
+                        "team1_id": match[0]['team_id'],
+                        "team1": match[0]['team_name'],
+                        "team2_id": match[1]['team_id'],
+                        "team2": match[1]['team_name']
+                    })
+        schedule.sort(key=lambda x: x['round_id'])
+        schedule = cutList1(schedule, 'round_id')
+
+    elif season_type == 'cup':
+        indeices = math.ceil(len(teams) / float(cfg['cup_group_member']))
+        # 随机分组
+        np.random.shuffle(teams)
+        groups = np.array_split(teams, indeices)
+
+        # 生成赛程
+        for group, i in zip(groups, range(len(groups))):
+            # 小组赛程
+            match_gen = robin.RoundRobinScheduler(group.tolist(), meetings=1)
+            rounds = match_gen.generate_schedule()
+            for round, j in zip(rounds, range(len(rounds))):
+                for match in round:
+                    if (match[0] is not None and match[1] is not None):
+                        schedule.append({
+                            "round_id": j + 1,
+                            "group_id": i + 1,
+                            "team1_id": match[0]['team_id'],
+                            "team1": match[0]['team_name'],
+                            "team2_id": match[1]['team_id'],
+                            "team2": match[1]['team_name']
+                        })
+
+        schedule.sort(key=lambda x: x['round_id'])
+        schedule = cutList1(schedule, 'round_id')
+
+    return json.dumps(schedule)
+
+
+@bp.route('/save_schedule', methods=('GET', 'POST'))
+@root_login_required
+def save_schedule():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    season_id = request.form['season_id']
+    schedule = json.loads(request.form['schedule'])
+
+    for round in schedule:
+        for match in round:
+            sql = '''
+                insert into matches (season_id, round_id,
+                    team1_id, team2_id) values ({},{},{},{})
+                '''.format(season_id, match['round_id'], match['team1_id'],
+                           match['team2_id'])
+            cur.execute(sql)
+            db.commit()
+
+    return "OK"
 
 
 @bp.route('/cup_chouqian')

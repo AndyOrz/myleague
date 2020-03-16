@@ -64,9 +64,22 @@ def league():
     db = get_db()
     cur = db.cursor(dictionary=True)
 
+    sql = '''
+        SELECT team_name, team_id FROM team
+        WHERE season_id = {}
+        '''.format(cfg['league_season_id'])
+
+    cur.execute(sql)
+    league_teams = cur.fetchall()
+
+
+
     return render_template('background/league.html',
                            name=sidebar_items_bg['main']['name'],
-                           sidebar_items=sidebar_items_bg)
+                           sidebar_items=sidebar_items_bg,
+                           current_cfg=cfg,
+                           league_teams=league_teams
+                           )
 
 
 @bp.route(sidebar_items_bg['cup']['route'])

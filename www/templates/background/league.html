@@ -5,7 +5,82 @@
 {% endblock %}
 
 {% block content %}
-<h2>当前赛季设置</h2>
-<h2>抽签</h2>
+<script src="{{url_for('static', filename='js/background_league.js')}}"></script>
+<h2>球队管理</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">球队名称</th>
+            <th scope="col">操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in league_teams %}
+        <tr>
+            <td>{{ t['team_name'] }}</td>
+            <td>
+                <form action="{{ url_for('works.del_team') }}" method="post">
+                    <input name="team_id" value="{{t['team_id']}}" hidden>
+                    <input type="submit" class="btn btn-sm btn-secondary" value="删除">
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+
 <h2>赛季管理</h2>
+<h3>当前赛程</h3>
+<button type="button" class="btn btn-secondary" id="delete_schedule">删除赛程</button>
+<button type="button" class="btn btn-secondary" id="generate_schedule">生成赛程</button>
+<button type="button" class="btn btn-secondary" id="save_schedule" disabled>保存</button>
+<div id="schedule"></div>
+<br>
+<script>
+    $(document).ready(()=>{
+        var schedule = "";
+        $.post(
+            "{{ url_for('works.get_schedule') }}", 
+            { season_id: "{{current_cfg['league_season_id']}}" },
+            function (data, status) {
+                schedule = data;
+                $("#schedule").show_schedule(data);
+            }
+        );
+        $('#delete_schedule').click(()=>{
+            $.post(
+                "{{ url_for('works.delete_schedule') }}", 
+                { season_id: "{{current_cfg['league_season_id']}}" },
+                function (data, status) {
+                    schedule = "";
+                    $("#schedule").show_schedule(data);
+                }
+            );
+        });
+        $('#generate_schedule').click(()=>{
+            $.post(
+            "{{ url_for('works.generate_schedule') }}",
+            { season_id: "{{current_cfg['league_season_id']}}" },
+            function (data, status) {
+                schedule = data;
+                $("#schedule").show_schedule(data);
+                $("#save_schedule").attr("disabled",false);
+            }
+        );
+        });
+        $('#save_schedule').click(()=>{
+            $.post(
+            "{{ url_for('works.save_schedule') }}",
+            { 
+                season_id: "{{current_cfg['league_season_id']}}",
+                schedule: schedule
+            },
+            function (data, status) {
+                $("#save_schedule").attr("disabled",true);
+                alert(data);
+            });
+        });
+    });
+</script>
 {% endblock %}
