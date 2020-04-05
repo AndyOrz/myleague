@@ -1,0 +1,262 @@
+{% macro show_scoreboard(scoreboard) %}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">排名</th>
+            <th scope="col">球队</th>
+            <th scope="col">场次</th>
+            <th scope="col">胜</th>
+            <th scope="col">平</th>
+            <th scope="col">负</th>
+            <th scope="col">进球</th>
+            <th scope="col">失球</th>
+            <th scope="col">净胜球</th>
+            <th scope="col">积分</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in scoreboard %}
+        <tr>
+            <th scope="row">{{ s['rank'] }}</th>
+            <td>{{ s['team_name'] }}</td>
+            <td>{{ s['matches'] }}</td>
+            <td>{{ s['win'] }}</td>
+            <td>{{ s['draw'] }}</td>
+            <td>{{ s['lose'] }}</td>
+            <td>{{ s['goals_for'] }}</td>
+            <td>{{ s['goals_against'] }}</td>
+            <td>{{ s['goals_diff'] }}</td>
+            <td>{{ s['score'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+{% macro show_matches(matches) %}
+<table class="table">
+    <tbody>
+        {% for m in matches %}
+        <tr>
+            <td>{{ m['team1'] }} vs {{ m['team2'] }}</td>
+            <td>
+                {% if m['team1_score'] == None and m['team2_score'] == None %}
+                <button type="button" class="btn btn-sm btn-outline-dark" data-toggle="modal"
+                    data-target="#Modal_Submit_Score" data-match_id="{{m['match_id']}}"
+                    data-team1_id="{{m['team1_id']}}"data-team2_id="{{m['team2_id']}}"
+                    data-team1="{{m['team1']}}"data-team2="{{m['team2']}}"
+                    >提交比分</button>
+                {% else %}
+                {{ m['team1_score'] }} - {{ m['team2_score'] }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+{% macro show_scoring_chart(scoring_chart) %}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">排名</th>
+            <th scope="col">球队</th>
+            <th scope="col">球员</th>
+            <th scope="col">进球数</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in scoring_chart %}
+        <tr>
+            <th scope="row">{{ loop.index }}</th>
+            <td>{{ s['team_name'] }}</td>
+            <td>{{ s['player_name'] }}</td>
+            <td>{{ s['scores'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+{% macro show_sidebar(sidebar_items) %}
+<nav class="col-md-2 d-none d-md-block bg-light sidebar">
+    <div class="sidebar-sticky">
+        <ul class="nav nav-pills flex-column">
+            {% for k,v in sidebar_items.items() %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{v['route']}}">{{ v['name'] }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</nav>
+{% endmacro %}
+
+{% macro show_submit_modal() %}
+<div class="modal fade bd-example-modal-lg" id="Modal_Submit_Score" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">提交比分</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p class="text-left" id="team1_name"></p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-right" id="team1_score">0</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-left" id="team2_score">0</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="text-right" id="team2_name"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">球员名</th>
+                                        <th scope="col">进球</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="team1_players">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">球员名</th>
+                                        <th scope="col">进球</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="team2_players">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit">提交</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{{url_for('static', filename='js/submit_score.js')}}"></script>
+<script>
+    $('#Modal_Submit_Score').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        // Extract info from data-* attributes
+        var match_id = button.data('match_id');
+
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        var modal = $(this);
+        $.post(
+            "{{ url_for('works.get_players') }}",
+            { team_id: button.data('team1_id') },
+            function (data, status) {
+                team1_players = JSON.parse(data);
+                modal.find('#team1_name').text(button.data('team1'));
+                modal.find('#team1_players').show_players(team1_players);
+                modal.find('#team1_players input').on("input propertychange",()=>{
+                    var sum_score= 0;
+                    modal.find('#team1_players input').each((i,e)=>{
+                        $(e).val(parseInt($(e).val()));
+                        if ($(e).val()<0) $(e).val(0);
+                        sum_score+=Number($(e).val());
+                    });
+                    modal.find('#team1_score').text(sum_score);
+                });
+            }
+        );
+        $.post(
+            "{{ url_for('works.get_players') }}",
+            { team_id: button.data('team2_id') },
+            function (data, status) {
+                team2_players = JSON.parse(data);
+                modal.find('#team2_name').text(button.data('team2'));
+                modal.find('#team2_players').show_players(team2_players);
+                modal.find('#team2_players input').on("input propertychange",()=>{
+                    var sum_score= 0;
+                    modal.find('#team2_players input').each((i,e)=>{
+                        $(e).val(parseInt($(e).val()));
+                        if ($(e).val()<0) $(e).val(0);
+                        sum_score+=Number($(e).val());
+                    });
+                    modal.find('#team2_score').text(sum_score);
+                });
+            }
+        );
+
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        modal.find('#submit').click(() => {
+            var team1_scores = modal.find('#team1_players tr').get_scores();
+            var team2_scores = modal.find('#team2_players tr').get_scores();
+            
+            $.ajax({
+                url:"{{ url_for('works.submit_match_result') }}",
+                async:false,
+                type:"POST",
+                data:{
+                    match_id: match_id,
+                    team1_scores:JSON.stringify(team1_scores),
+                    team2_scores:JSON.stringify(team2_scores)
+                },
+                success:function (data, status) {
+                    alert(data);
+                    location.reload();
+                },
+            });
+        });
+    });
+
+</script>
+{% endmacro %}
+
+{% macro show_schedule_modal(season_id) %}
+<script src="{{url_for('static', filename='js/show_schedule.js')}}"></script>
+<div class="modal fade" id="Modal_Schedule" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">赛程</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="schedule">
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('#Modal_Schedule').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        // Extract info from data-* attributes
+
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        var modal = $(this);
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        $.post(
+            "{{ url_for('works.get_schedule') }}", 
+            { season_id: "{{ season_id }}" },
+            function (data, status) {
+                schedule = data;
+                $("#schedule").show_schedule(data);
+            }
+        );
+    });
+</script>
+{% endmacro %}

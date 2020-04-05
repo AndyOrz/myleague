@@ -1,23 +1,17 @@
-import configparser
+import json
 
 
 class Config(object):
     def __init__(self):
-        self.cfg_g = configparser.ConfigParser()
-        self.cfg_g.read('./www/config/global.conf')
-        self.sidebar_items = configparser.ConfigParser()
-        self.sidebar_items.read('./www/config/sidebar_items.conf')
-        self.sidebar_items_bg = configparser.ConfigParser()
-        self.sidebar_items_bg.read('./www/config/sidebar_items_bg.conf')
+        file = open('./www/config/config.json', "r")
+        self.cfg = json.loads(file.read())
 
-    def get_cfg_global(self):
-        return self.cfg_g
+    def get_cfg(self):
+        return self.cfg
 
-    def get_sidebar_items(self):
-        return self.sidebar_items
-
-    def get_sidebar_items_bg(self):
-        return self.sidebar_items_bg
+    def change_and_save_cfg(self):
+        file = open('./www/config/config.json', "w+")
+        return file.write(json.dumps(self.cfg, ensure_ascii=False, indent=4))
 
 
 config = Config()

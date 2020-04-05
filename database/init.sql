@@ -14,8 +14,10 @@ create table season
 (
     season_id int primary key auto_increment,
     season_name char(32),
-    season_type char(10), /*  leage / cup / super cup  */
-    season_status char(1) /*是否可用*/
+    season_type char(10), /*  leage / cup / supercup  */
+    season_status char(1), /* 是否可用 */
+    cup_members_per_group tinyint, /* 杯赛中每小组的人数 */
+    meets tinyint /* 联赛杯赛中循环赛中碰面的轮数 */
 );
 
 insert into season values(1, "league_1", "league", "y");
@@ -67,11 +69,9 @@ drop table if exists player;
 create table player
 (
     player_id int primary key auto_increment,
-    player_name varchar(32),
+    player_name varchar(32) not null,
     team_id int,
-    season_id int,
-    scores smallint,
-    constraint player_season_id foreign key(season_id) references season(season_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    scores smallint not null,
     constraint player_team_id foreign key(team_id) references team(team_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

@@ -1,18 +1,21 @@
 {% extends './base.html' %}
 
 {% block sidebar %}
-{% for key in sidebar_items.sections() %}
-<li class="nav-item">
-    <a class="nav-link" href="{{sidebar_items[key]['route']}}">{{ sidebar_items[key]['name'] }}</a>
-</li>
-{% endfor %}
+    {% from './public_elements.html' import show_sidebar %}
+    {{show_sidebar(sidebar_items)}}
 {% endblock %}
 
 {% block content %}
-<h3>积分榜</h3>
-        {% block content_scoreboard %}{% endblock %}
-        <h3>本轮对阵</h3>
-        {% block content_matches %}{% endblock %}
-        <h3>射手榜</h3>
-        {% block content_scores %}{% endblock %}
+<div class="row">
+    <div class="col-md-10"><h3>积分榜</h3></div>
+    <div class="col-md-2 float-right">
+        <button type="button" class="btn btn-outline-info float-right" data-toggle="modal"
+            data-target="#Modal_Schedule">查看所有赛程</button>
+    </div>
+</div>
+    {% block content_scoreboard %}{% endblock %}
+    <h3>本轮对阵</h3>
+    {% block content_matches %}{% endblock %}
+    <h3>射手榜</h3>
+    {% block content_scores %}{% endblock %}
 {% endblock %}

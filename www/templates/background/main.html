@@ -5,13 +5,13 @@
 <form action="{{ url_for('works.change_season_round', which=which)}}" method="POST">
   <div class="form-row">
     <div class="form-group col-md-4">
-      <label for="season">选择赛事</label>
+      <label for="season">切换赛事</label>
       <select id="season" class="form-control" name="season">
         {% for k,v in list.items() %}
         {% if k == season_id|int %}
-        <option selected>{{k}}-{{v}}</option>
+        <option value="{{k}}" selected>{{v}}</option>
         {% else %}
-        <option>{{k}}-{{v}}</option>
+        <option value="{{k}}">{{v}}</option>
         {% endif %}
         {% endfor %}
       </select>
@@ -23,6 +23,19 @@
     <div class="form-group col-md-1">
       <label>&emsp;</label>
       <button type="submit" class="btn btn-outline-dark">更改</button>
+    </div>
+  </div>
+</form>
+
+<form action="{{ url_for('works.create_season', which=which)}}" method="POST">
+  <div class="form-row">
+    <div class="form-group col-md-8">
+      <label>新增赛事</label>
+      <input type="text" placeholder="名字" class="form-control" name="name">
+    </div>
+    <div class="form-group col-md-1">
+      <label>&emsp;</label>
+      <button type="submit" class="btn btn-outline-dark">添加</button>
     </div>
   </div>
 </form>

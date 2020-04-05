@@ -7,8 +7,8 @@ from www.config import config
 
 bp = Blueprint('league', __name__)
 
-cfg = config.get_cfg_global()['default']
-sidebar_items = config.get_sidebar_items()
+cfg = config.get_cfg()['global']
+sidebar_items = config.get_cfg()['sidebar_items']
 
 
 @bp.route(sidebar_items['league']['route'])
@@ -41,7 +41,8 @@ def league():
 
     # matches
     sql = '''
-        SELECT match_id, t1.team_name as team1, t2.team_name as team2,
+        SELECT match_id, team1_id, team2_id, 
+            t1.team_name as team1, t2.team_name as team2,
             team1_score, team2_score
         FROM matches as m, team as t1, team as t2
         WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
@@ -52,11 +53,24 @@ def league():
     cur.execute(sql)
     matches = cur.fetchall()
 
+    # scoring chart
+    sql = '''
+        SELECT team_name, player_name, scores
+        FROM player as p, team as t
+        WHERE t.season_id = {} and t.team_id=p.team_id and scores>0
+        ORDER BY scores desc
+        '''.format(cfg['league_season_id'])
+
+    cur.execute(sql)
+    scoring_chart = cur.fetchall()
+
     return render_template('league/league.html',
                            name=sidebar_items['league']['name'],
+                           season_id=cfg['league_season_id'],
                            sidebar_items=sidebar_items,
                            scoreboard=sb,
-                           matches=matches)
+                           matches=matches,
+                           scoring_chart=scoring_chart)
 
 
 @bp.route(sidebar_items['cup']['route'])
@@ -71,6 +85,7 @@ def cup():
             goals_for, goals_against
         FROM team, scoreboard
         WHERE team.team_id=scoreboard.team_id and team.season_id = {}
+            and group_id is not null
         '''.format(cfg['cup_season_id'])
 
     cur.execute(sql)
@@ -96,7 +111,8 @@ def cup():
 
     # matches
     sql = '''
-        SELECT match_id, t1.team_name as team1, t2.team_name as team2,
+        SELECT match_id, team1_id, team2_id, 
+            t1.team_name as team1, t2.team_name as team2,
             team1_score, team2_score
         FROM matches as m, team as t1, team as t2
         WHERE m.team1_id=t1.team_id and m.team2_id=t2.team_id
@@ -107,11 +123,24 @@ def cup():
     cur.execute(sql)
     matches = cur.fetchall()
 
+    # scoring chart
+    sql = '''
+        SELECT team_name, player_name, scores
+        FROM player as p, team as t
+        WHERE t.season_id = {} and t.team_id=p.team_id and scores>0
+        ORDER BY scores desc
+        '''.format(cfg['cup_season_id'])
+
+    cur.execute(sql)
+    scoring_chart = cur.fetchall()
+
     return render_template('league/cup.html',
                            name=sidebar_items['cup']['name'],
+                           season_id=cfg['cup_season_id'],
                            sidebar_items=sidebar_items,
                            scoreboard=new_sb,
-                           matches=matches)
+                           matches=matches,
+                           scoring_chart=scoring_chart)
 
 
 @bp.route(sidebar_items['supercup']['route'])
@@ -123,6 +152,7 @@ def supercup():
     return render_template(
         'league/supercup.html',
         name=sidebar_items['supercup']['name'],
+        season_id=cfg['supercup_season_id'],
         sidebar_items=sidebar_items,
     )
 
@@ -162,8 +192,26 @@ def team_manage():
 def player_register():
     db = get_db()
     cur = db.cursor(dictionary=True)
+
+    sql = '''
+        SELECT team_name, team_id FROM team
+        WHERE user_id={} and season_id = {}
+        '''.format(g.user['user_id'], cfg['league_season_id'])
+
+    cur.execute(sql)
+    league_teams = cur.fetchall()
+
+    sql = '''
+        SELECT team_name, team_id FROM team
+        WHERE user_id={} and season_id = {}
+        '''.format(g.user['user_id'], cfg['cup_season_id'])
+
+    cur.execute(sql)
+    cup_teams = cur.fetchall()
     
     return render_template('manage/player_register.html',
                            name=sidebar_items['player_register']['name'],
                            sidebar_items=sidebar_items,
+                           league_teams=league_teams,
+                           cup_teams=cup_teams
                            )

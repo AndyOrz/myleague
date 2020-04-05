@@ -1,11 +1,6 @@
 {% extends './manage/base.html' %}
 
-{% block header %}
-<h1>{% block title %}{{name}}{% endblock %}</h1>
-{% endblock %}
-
-{% block content %}
-<h2>联赛</h2>
+{% macro show_teams_management(teams) %}
 <table class="table">
     <thead>
         <tr>
@@ -14,54 +9,139 @@
         </tr>
     </thead>
     <tbody>
-        {% for t in league_teams %}
+        {% for t in teams %}
         <tr>
             <td>{{ t['team_name'] }}</td>
             <td>
-                <form action="{{ url_for('works.del_team') }}" method="post">
-                    <input name="team_id" value="{{t['team_id']}}" hidden>
-                    <input type="submit" class="btn btn-sm btn-secondary" value="删除">
-                </form>
+                <button type="button" class="btn btn-sm btn-secondary" data-toggle="modal"
+                    data-target="#Modal_Rename" data-team_id="{{t['team_id']}}"
+                    data-team_name="{{t['team_name']}}">重命名</button>
+                <button type="button" class="btn btn-sm btn-secondary" data-toggle="modal"
+                    data-target="#Modal_Delete" data-team_id="{{t['team_id']}}"
+                    data-team_name="{{t['team_name']}}">删除球队</button>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-<h4>添加队伍</h4>
-<form action="{{ url_for('works.add_league_team') }}" method="post">
+{% endmacro %}
+
+{% macro add_team(which) %}
+<form action="{{ url_for('works.add_team', which=which)}}" method="POST">
     <label for="team_name">队伍名</label>
     <input name="team_name" id="team_name" required>
     <input type="submit" class="btn btn-sm btn-dark" value="提交">
 </form>
+{% endmacro %}
 
-<br><br>
-<h2 >杯赛</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col">队伍名称</th>
-            <th scope="col">操作</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for t in cup_teams %}
-        <tr>
-            <td>{{ t['team_name'] }}</td>
-            <td>
-                <form action="{{ url_for('works.del_team') }}" method="post">
-                    <input name="team_id" value="{{t['team_id']}}" hidden>
-                    <input type="submit" class="btn btn-sm btn-secondary" value="删除">
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% block header %}
+<h1>{% block title %}{{name}}{% endblock %}</h1>
+{% endblock %}
 
-<h4>添加队伍</h4>
-<form action="{{ url_for('works.add_cup_team') }}" method="post">
-    <label for="team_name">队伍名</label>
-    <input name="team_name" id="team_name" required>
-    <input type="submit" class="btn btn-sm btn-dark" value="提交">
-</form>
+{% block content %}
+    <h2>联赛</h2>
+    {{show_teams_management(league_teams)}}
+
+    <h4>添加队伍</h4>
+    {{add_team('league')}}
+
+    <br><br>
+    <h2 >杯赛</h2>
+    {{show_teams_management(cup_teams)}}
+
+    <h4>添加队伍</h4>
+    {{add_team('cup')}}
+
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="Modal_Delete" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">删除球队</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <span></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit">确定</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Modal_Rename" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">球队重命名</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="输入新的球队名" >
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit">确定</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<script>
+    $('#Modal_Delete').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        // Extract info from data-* attributes
+        var team_id = button.data('team_id');
+        var team_name = button.data('team_name');
+
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        var modal = $(this);
+        modal.find('.modal-body span').html('将删除球队"' + team_name + '"和队中的球员信息!<br><br>确定吗!');
+        modal.find('#submit').click(() => {
+            $.post(
+                "{{ url_for('works.del_team') }}",
+                { team_id: team_id },
+                function (data, status) {
+                    alert(data);
+                    location.reload();
+                }
+            );
+        });
+    });
+
+    $('#Modal_Rename').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        // Extract info from data-* attributes
+        var team_id = button.data('team_id');
+        var team_name = button.data('team_name');
+
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        var modal = $(this);
+        modal.find('#submit').click(() => {
+            $.post(
+                "{{ url_for('works.rename_team') }}",
+                {
+                    team_id: team_id,
+                    new_team_name: modal.find('.modal-body input').val()
+                },
+                function (data, status) {
+                    alert(data);
+                    location.reload();
+                }
+            );
+        });
+    });
+</script>
 {% endblock %}

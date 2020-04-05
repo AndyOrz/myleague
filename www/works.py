@@ -10,7 +10,7 @@ from www.config import config
 from tools.tools import cutList1
 
 bp = Blueprint('works', __name__, url_prefix='/works')
-cfg = config.get_cfg_global()['default']
+cfg = config.get_cfg()['global']
 
 
 @bp.route('/submit_match_result', methods=('GET', 'POST'))
@@ -19,46 +19,83 @@ def submit_match_result():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
+
+        sql = '''
+            select team1_score, team2_score from matches
+            where match_id={}
+            '''.format(request.form['match_id'])
+        cur.execute(sql)
+        match = cur.fetchone()
+        if match['team1_score'] is not None and match[
+                'team2_score'] is not None:
+            return "不可重复提交！"
+
+        team1_scores = json.loads(request.form['team1_scores'])
+        team2_scores = json.loads(request.form['team2_scores'])
+        team1_score = 0
+        team2_score = 0
+
+        for s in team1_scores:
+            team1_score = team1_score + int(s['scores'])
+            sql = '''
+                update player set scores=scores+{} where player_id={}
+                '''.format(s['scores'], s['player_id'])
+            cur.execute(sql)
+            db.commit()
+
+        for s in team2_scores:
+            team2_score = team2_score + int(s['scores'])
+            sql = '''
+                update player set scores=scores+{} where player_id={}
+                '''.format(s['scores'], s['player_id'])
+            cur.execute(sql)
+            db.commit()
+
         sql = '''
             update matches set team1_score={}, team2_score={}
             where match_id={}
-            '''.format(request.form['team1_score'],
-                       request.form['team2_score'], request.form['match_id'])
-
+            '''.format(team1_score, team2_score, request.form['match_id'])
         cur.execute(sql)
         db.commit()
-    return redirect(url_for('index'))
+
+    return "OK!"
 
 
-@bp.route('/add_league_team', methods=('GET', 'POST'))
+@bp.route('/create_season/<which>', methods=('GET', 'POST'))
+@root_login_required
+def create_season(which):
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    season_name = request.form['name']
+
+    sql = '''
+          insert into season (season_name,season_type,season_status)
+          values ("{}","{}","{}")
+          '''.format(season_name, which, 'y')
+    cur.execute(sql)
+    db.commit()
+
+    return redirect(url_for('background.main'))
+
+
+@bp.route('/add_team/<which>', methods=('GET', 'POST'))
 @login_required
-def add_league_team():
+def add_team(which):
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
+        if which == 'league':
+            season_id = cfg['league_season_id']
+        elif which == 'cup':
+            season_id = cfg['cup_season_id']
+        elif which == 'supercup':
+            season_id = cfg['supercup_season_id']
         sql1 = '''
             insert into team (team_name, user_id, season_id)
             values('{}', {}, {})
-            '''.format(request.form['team_name'], g.user['user_id'],
-                       cfg['league_season_id'])
+            '''.format(request.form['team_name'], g.user['user_id'], season_id)
 
         cur.execute(sql1)
-        db.commit()
-    return redirect(url_for('league.team_manage'))
-
-
-@bp.route('/add_cup_team', methods=('GET', 'POST'))
-@login_required
-def add_cup_team():
-    if request.method == 'POST':
-        db = get_db()
-        cur = db.cursor(dictionary=True)
-        sql2 = '''
-            insert into team (team_name, user_id, season_id)
-            values('{}', {}, {})
-            '''.format(request.form['team_name'], g.user['user_id'],
-                       cfg['cup_season_id'])
-        cur.execute(sql2)
         db.commit()
     return redirect(url_for('league.team_manage'))
 
@@ -69,33 +106,47 @@ def del_team():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
+
         sql = '''
             delete from team where team_id={}
             '''.format(request.form['team_id'])
+        cur.execute(sql)
+        db.commit()
+    return "OK"
+
+
+@bp.route('/rename_team', methods=('GET', 'POST'))
+@login_required
+def rename_team():
+    if request.method == 'POST':
+        db = get_db()
+        cur = db.cursor(dictionary=True)
+        sql = '''
+            update team set team_name="{}" where team_id={}
+            '''.format(request.form['new_team_name'], request.form['team_id'])
 
         cur.execute(sql)
         db.commit()
-    return redirect(url_for('league.team_manage'))
+    return "OK"
 
 
 @bp.route('/change_season_round/<which>', methods=('GET', 'POST'))
 @root_login_required
 def change_season_round(which):
-    season_id = request.form['season'].split('-', 1)[0]
+    season_id = request.form['season']
     round_id = request.form['round']
     if which == 'league':
-        cfg.set('default', 'league_season_id', season_id)
-        cfg.set('default', 'league_round_id', round_id)
+        cfg['league_season_id'] = season_id
+        cfg['league_round_id'] = round_id
     elif which == 'cup':
-        cfg.set('default', 'cup_season_id', season_id)
-        cfg.set('default', 'cup_round_id', round_id)
+        cfg['cup_season_id'] = season_id
+        cfg['cup_round_id'] = round_id
     elif which == 'supercup':
-        cfg.set('default', 'supercup_season_id', season_id)
-        cfg.set('default', 'supercup_round_id', round_id)
+        cfg['supercup_season_id'] = season_id
+        cfg['supercup_round_id'] = round_id
 
-    with open('./www/config/global.conf', 'w') as f:
-        cfg.write(f)
-    return str(round_id) + "  " + str(season_id) + "  " + which
+    config.change_and_save_cfg()
+    return redirect(url_for('background.main'))
 
 
 @bp.route('/get_schedule', methods=('GET', 'POST'))
@@ -125,6 +176,20 @@ def delete_schedule():
     db = get_db()
     cur = db.cursor(dictionary=True)
     season_id = request.form['season_id']
+    sql = '''
+          update matches set team1_score=null, team2_score=null
+          where season_id={}
+          '''.format(season_id)
+    cur.execute(sql)
+    db.commit()
+
+    sql = '''
+          update player,team set scores=0
+          where player.team_id=team.team_id and season_id={}
+          '''.format(season_id)
+    cur.execute(sql)
+    db.commit()
+
     sql = '''
           delete from matches where season_id={}
           '''.format(season_id)
@@ -217,6 +282,53 @@ def save_schedule():
             cur.execute(sql)
             db.commit()
 
+    return "OK"
+
+
+@bp.route('/get_players', methods=('GET', 'POST'))
+@root_login_required
+def get_players():
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+    team_id = request.form['team_id']
+
+    sql = '''
+          select player_id, player_name, scores from player where team_id={}
+          order by scores desc
+          '''.format(team_id)
+    cur.execute(sql)
+    players = cur.fetchall()
+
+    return json.dumps(players)
+
+
+@bp.route('/add_player', methods=('GET', 'POST'))
+@login_required
+def add_player():
+    if request.method == 'POST':
+        db = get_db()
+        cur = db.cursor(dictionary=True)
+        sql = '''
+            insert into player (player_name,team_id,scores) values ("{}",{},{})
+            '''.format(request.form['player_name'], request.form['team_id'], 0)
+
+        cur.execute(sql)
+        db.commit()
+    return "OK"
+
+
+@bp.route('/del_player', methods=('GET', 'POST'))
+@login_required
+def del_player():
+    if request.method == 'POST':
+        db = get_db()
+        cur = db.cursor(dictionary=True)
+        sql = '''
+            delete from player where player_id={}
+            '''.format(request.form['player_id'])
+
+        cur.execute(sql)
+        db.commit()
     return "OK"
 
 

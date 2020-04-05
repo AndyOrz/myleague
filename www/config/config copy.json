@@ -1,0 +1,58 @@
+{
+    "global": {
+        "league_season_id": 1,
+        "league_round_id": 1,
+        "cup_season_id": "2",
+        "cup_round_id": "3",
+        "supercup_season_id": 3,
+        "supercup_round_id": 1
+    },
+    "sidebar_items": {
+        "league": {
+            "name": "联赛",
+            "route": "/"
+        },
+        "cup": {
+            "name": "杯赛",
+            "route": "/cup"
+        },
+        "supercup": {
+            "name": "超级杯",
+            "route": "/supercup"
+        },
+        "line1": {
+            "name": "--------------",
+            "route": "#"
+        },
+        "team_manage": {
+            "name": "球队管理",
+            "route": "/team_manage"
+        },
+        "line2": {
+            "name": "--------------",
+            "route": "#"
+        },
+        "repassword": {
+            "name": "修改密码",
+            "route": "/auth/repassword"
+        }
+    },
+    "sidebar_items_bg": {
+        "main": {
+            "name": "主页",
+            "route": "/background/"
+        },
+        "league": {
+            "name": "联赛",
+            "route": "/background/league"
+        },
+        "cup": {
+            "name": "杯赛",
+            "route": "/background/cup"
+        },
+        "supercup": {
+            "name": "超级杯",
+            "route": "/background/supercup"
+        }
+    }
+}

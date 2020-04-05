@@ -5,4 +5,112 @@
 {% endblock %}
 
 {% block content %}
+<script src="{{url_for('static', filename='js/player_register.js')}}"></script>
+<h3>选择你要管理的球队</h3>
+<select class="custom-select" id="team_selection">
+    {% for t in league_teams %}
+    <option value="{{t['team_id']}}">联赛--{{t['team_name']}}</option>
+    {% endfor %}
+    {% for t in cup_teams %}
+    <option value="{{t['team_id']}}">杯赛--{{t['team_name']}}</option>
+    {% endfor %}
+</select>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">球员名</th>
+            <th scope="col">进球数</th>
+            <th scope="col">管理</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<br>
+<h4>添加球员</h4>
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="球员名">
+    <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button">提交</button>
+    </div>
+</div>
+
+<script>
+    var update_players=function(){
+        $.post(
+            "{{ url_for('works.get_players') }}",
+            { team_id: $('#team_selection').val() },
+            function (data, status) {
+                $('.table tbody').show_players(data);
+            }
+        );
+    }
+    $(document).ready(() => {
+        update_players();
+        $('#team_selection').change(() => {
+            update_players();
+        });
+        $('.input-group button').click(()=>{
+            $.post(
+                "{{ url_for('works.add_player') }}",
+                { 
+                    team_id: $('#team_selection').val(),
+                    player_name: $('.input-group input').val()
+                },
+                function (data, status) {
+                    $('.input-group input').val("");
+                    update_players();
+                }
+            );
+        });
+    });
+</script>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="Modal_Delete" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">删除球员</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <span></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit">确定</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<script>
+    $('#Modal_Delete').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        // Extract info from data-* attributes
+        var player_id = button.data('player_id');
+        var player_name = button.data('player_name');
+
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        var modal = $(this);
+        modal.find('.modal-body span').html('将删除球员"' + player_name + '"的所有信息!<br><br>确定吗!');
+        modal.find('#submit').click(() => {
+            $.post(
+                "{{ url_for('works.del_player') }}",
+                { player_id: player_id },
+                function (data, status) {
+                    alert(data);
+                    location.reload();
+                }
+            );
+        });
+    });
+</script>
 {% endblock %}

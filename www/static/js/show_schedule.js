@@ -7,7 +7,10 @@ $.fn.show_schedule = function(data) {
             str += '<div class="card-header">第' + matches[0]['round_id'] + '轮</div>';
             str += '<div class="card-body">';
             matches.forEach(match => {
-                str += match['team1'] + ' vs ' + match['team2'] + '<br>';
+                str += match['team1'] + ' vs ' + match['team2'];
+                if (match['team1_score'] != null && match['team2_score'] != null)
+                    str+='&emsp;'+match['team1_score']+'-'+match['team2_score']+ '<br>';
+                else str+= '<br>';
             });
             str += '</div></div>';
             return str;

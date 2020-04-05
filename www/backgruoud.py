@@ -4,8 +4,8 @@ from www.auth import root_login_required
 from www.db import get_db
 from www.config import config
 
-cfg = config.get_cfg_global()['default']
-sidebar_items_bg = config.get_sidebar_items_bg()
+cfg = config.get_cfg()['global']
+sidebar_items_bg = config.get_cfg()['sidebar_items_bg']
 
 bp = Blueprint('background', __name__)
 

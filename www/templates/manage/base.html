@@ -1,9 +1,6 @@
 {% extends './base.html' %}
 
 {% block sidebar %}
-{% for key in sidebar_items.sections() %}
-<li class="nav-item">
-    <a class="nav-link" href="{{sidebar_items[key]['route']}}">{{ sidebar_items[key]['name'] }}</a>
-</li>
-{% endfor %}
+    {% from './public_elements.html' import show_sidebar %}
+    {{show_sidebar(sidebar_items)}}
 {% endblock %}
