@@ -4,6 +4,7 @@ import competitions.scheduler.roundrobin as robin
 import numpy as np
 import math
 import json
+import re
 from www.auth import login_required, root_login_required
 from www.db import get_db
 from www.config import config
@@ -150,7 +151,7 @@ def change_season_round(which):
 
 
 @bp.route('/get_schedule', methods=('GET', 'POST'))
-@root_login_required
+@login_required
 def get_schedule():
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -286,7 +287,7 @@ def save_schedule():
 
 
 @bp.route('/get_players', methods=('GET', 'POST'))
-@root_login_required
+@login_required
 def get_players():
     db = get_db()
     cur = db.cursor(dictionary=True)
@@ -308,11 +309,25 @@ def add_player():
     if request.method == 'POST':
         db = get_db()
         cur = db.cursor(dictionary=True)
-        sql = '''
-            insert into player (player_name,team_id,scores) values ("{}",{},{})
-            '''.format(request.form['player_name'], request.form['team_id'], 0)
+        if re.search(',',request.form['player_name']) is not None:
+            players = request.form['player_name'].split(',')
+        elif re.search('，',request.form['player_name']) is not None:
+            players = request.form['player_name'].split('，')
+        elif re.search(';',request.form['player_name']) is not None:
+            players = request.form['player_name'].split(';')
+        elif re.search('；',request.form['player_name']) is not None:
+            players = request.form['player_name'].split('；')
+        else:
+            players = [request.form['player_name']]
 
-        cur.execute(sql)
+        sql = 'insert into player (player_name,team_id,scores) values '
+        for player in players:
+            sql = sql + '("{}",{},{}),'.format(player.strip(), request.form['team_id'], 0)
+        # sql = '''
+        #     insert into player (player_name,team_id,scores) values ("{}",{},{})
+        #     '''.format(request.form['player_name'], request.form['team_id'], 0)
+
+        cur.execute(sql[:-1])
         db.commit()
     return "OK"
 

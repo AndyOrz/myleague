@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<script src="{{url_for('static', filename='js/player_register.js')}}"></script>
+<script src="{{url_for('static', filename='js/show_players.js')}}"></script>
 <h3>选择你要管理的球队</h3>
 <select class="custom-select" id="team_selection">
     {% for t in league_teams %}
@@ -17,6 +17,7 @@
 </select>
 
 <table class="table">
+    <caption></caption>
     <thead>
         <tr>
             <th scope="col">球员名</th>
@@ -31,7 +32,7 @@
 <br>
 <h4>添加球员</h4>
 <div class="input-group mb-3">
-    <input type="text" class="form-control" placeholder="球员名">
+    <input type="text" class="form-control" placeholder="输入球员名，用中英文逗号、分号分隔可批量添加">
     <div class="input-group-append">
         <button class="btn btn-outline-secondary" type="button">提交</button>
     </div>
@@ -44,6 +45,7 @@
             { team_id: $('#team_selection').val() },
             function (data, status) {
                 $('.table tbody').show_players(data);
+                $('.table caption').show_player_num(data);
             }
         );
     }

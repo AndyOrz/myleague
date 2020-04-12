@@ -15,3 +15,10 @@ $.fn.show_players = function(data) {
     });
 }
                     
+
+$.fn.show_player_num = function(data) {
+    var players = JSON.parse(data);
+    var len = players.length;
+    this.text("共"+len+"人")
+
+}

@@ -116,4 +116,4 @@ def root_login_required(view):
 @bp.route('/repassword')
 @login_required
 def repassword():
-    return "莫得"
+    return "请扫码Please"
