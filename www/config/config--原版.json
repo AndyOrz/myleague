@@ -1,7 +1,7 @@
 {
     "global": {
-        "league_season_id": "7",
-        "league_round_id": "1",
+        "league_season_id": "6",
+        "league_round_id": "11",
         "cup_season_id": "2",
         "cup_round_id": "3",
         "supercup_season_id": 3,
@@ -35,6 +35,10 @@
         "line2": {
             "name": "--------------",
             "route": "#"
+        },
+        "repassword": {
+            "name": "修改密码",
+            "route": "/auth/repassword"
         }
     },
     "sidebar_items_bg": {

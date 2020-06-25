@@ -72,6 +72,7 @@ create table player
     player_name varchar(32) not null,
     team_id int,
     scores smallint not null,
+    status char(20) default "enable",
     constraint player_team_id foreign key(team_id) references team(team_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

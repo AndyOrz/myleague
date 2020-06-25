@@ -105,7 +105,7 @@
         modal.find('.modal-body span').html('将删除球员"' + player_name + '"的所有信息!<br><br>确定吗!');
         modal.find('#submit').click(() => {
             $.post(
-                "{{ url_for('works.del_player') }}",
+                "{{ url_for('works.disable_player') }}",
                 { player_id: player_id },
                 function (data, status) {
                     alert(data);

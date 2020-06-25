@@ -295,7 +295,7 @@ def get_players():
 
     sql = '''
           select player_id, player_name, scores from player where team_id={}
-          order by scores desc
+          and status="enable" order by scores desc
           '''.format(team_id)
     cur.execute(sql)
     players = cur.fetchall()
@@ -340,6 +340,21 @@ def del_player():
         cur = db.cursor(dictionary=True)
         sql = '''
             delete from player where player_id={}
+            '''.format(request.form['player_id'])
+
+        cur.execute(sql)
+        db.commit()
+    return "OK"
+
+
+@bp.route('/disable_player', methods=('GET', 'POST'))
+@login_required
+def disable_player():
+    if request.method == 'POST':
+        db = get_db()
+        cur = db.cursor(dictionary=True)
+        sql = '''
+            update player set status="disable" where player_id={}
             '''.format(request.form['player_id'])
 
         cur.execute(sql)
